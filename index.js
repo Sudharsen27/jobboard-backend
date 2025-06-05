@@ -94,6 +94,10 @@ app.use(cors({
 app.use(express.json());            // Parse JSON bodies
 app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
 
+app.use((req, res, next) => {
+  res.removeHeader('Cross-Origin-Opener-Policy');
+  next();
+});
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
