@@ -101,6 +101,8 @@ app.use((req, res, next) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/uploads', express.static('uploads'));
+
 
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;
