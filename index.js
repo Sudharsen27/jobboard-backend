@@ -118,46 +118,105 @@
 //     console.error('❌ MongoDB connection error:', err);
 //   });
 
+// const express = require('express');
+// const mongoose = require('mongoose');
+// const cors = require('cors');
+// require('dotenv').config();
+
+// // Import routes
+// const authRoutes = require('./routes/auth');
+// const jobRoutes = require('./routes/jobs');
+// const applicationRoutes = require('./routes/applications'); // Add this line
+
+// const app = express();
+
+// // Middleware
+// app.use(cors({
+//   origin: 'http://localhost:3000', // React frontend URL
+//   credentials: true,               // Allow cookies and credentials
+// }));
+
+// app.use(express.json());            // Parse JSON bodies
+// app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
+
+// // Security headers adjustment
+// app.use((req, res, next) => {
+//   res.removeHeader('Cross-Origin-Opener-Policy');
+//   next();
+// });
+
+// // API routes
+// app.use('/api/auth', authRoutes);
+// app.use('/api/jobs', jobRoutes);
+// app.use('/api/applications', applicationRoutes); // Add this line
+// app.use('/uploads', express.static('uploads'));
+
+// // Error handling middleware
+// app.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(500).send('Something broke!');
+// });
+
+
+// // Connect to MongoDB and start server
+// const PORT = process.env.PORT || 5000;
+
+// mongoose.connect(process.env.MONGO_URI)
+//   .then(() => {
+//     console.log('✅ MongoDB connected successfully');
+//     app.listen(PORT, () => {
+//       console.log(`🚀 Server running on port ${PORT}`);
+//     });
+//   })
+//   .catch((err) => {
+//     console.error('❌ MongoDB connection error:', err);
+//     process.exit(1); // Exit process with failure
+//   });
+
+// // Handle unhandled promise rejections
+// process.on('unhandledRejection', (err) => {
+//   console.error('Unhandled Rejection:', err);
+//   // Close server and exit process
+//   server.close(() => process.exit(1));
+// });
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-// Import routes
 const authRoutes = require('./routes/auth');
-const jobRoutes = require('./routes/jobs');
-const applicationRoutes = require('./routes/applications'); // Add this line
+const jobRoutes = require('./routes/jobs'); // ✅ Already present
+const applicationRoutes = require('./routes/applications');
 
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // React frontend URL
-  credentials: true,               // Allow cookies and credentials
+  origin: 'http://localhost:3000',
+  credentials: true,
 }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(express.json());            // Parse JSON bodies
-app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
-
-// Security headers adjustment
 app.use((req, res, next) => {
   res.removeHeader('Cross-Origin-Opener-Policy');
   next();
 });
 
-// API routes
+// Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/applications', applicationRoutes); // Add this line
+app.use('/api/jobs', jobRoutes);             // ✅ Correctly placed
+app.use('/api/applications', applicationRoutes);
 app.use('/uploads', express.static('uploads'));
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
 
-// Connect to MongoDB and start server
+// Connect to MongoDB
 const PORT = process.env.PORT || 5000;
 
 mongoose.connect(process.env.MONGO_URI)
@@ -169,12 +228,11 @@ mongoose.connect(process.env.MONGO_URI)
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
-    process.exit(1); // Exit process with failure
+    process.exit(1);
   });
 
-// Handle unhandled promise rejections
+// Handle unhandled rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
-  // Close server and exit process
-  server.close(() => process.exit(1));
+  process.exit(1);
 });
