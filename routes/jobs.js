@@ -289,6 +289,114 @@
 
 // module.exports = router;
 
+// const express = require('express');
+// const Job = require('../models/Job');
+// const auth = require('../middleware/auth');
+// const upload = require('../middleware/upload'); // multer with memory storage
+
+// const router = express.Router();
+
+// /**
+//  * @route   GET /api/jobs
+//  * @desc    Get all jobs
+//  */
+// router.get('/', async (req, res) => {
+//   try {
+//     const jobs = await Job.find().populate('postedBy', 'name');
+//     res.json(jobs);
+//   } catch (error) {
+//     console.error('Error fetching jobs:', error);
+//     res.status(500).send('Server error');
+//   }
+// });
+
+// /**
+//  * @route   POST /api/jobs
+//  * @desc    Post a new job (employers only)
+//  */
+// router.post('/', auth, upload.single('pdf'), async (req, res) => {
+//   try {
+//     if (req.user.role !== 'employer') {
+//       return res.status(403).send('Only employers can post jobs');
+//     }
+
+//     const { title, description, location, salary } = req.body;
+
+//     if (!title || !description || !location) {
+//       return res.status(400).send('Missing required fields');
+//     }
+
+//     const jobData = {
+//       title,
+//       description,
+//       location,
+//       salary,
+//       postedBy: req.user._id
+//     };
+
+//     if (req.file) {
+//       jobData.pdf = {
+//         data: req.file.buffer,
+//         contentType: req.file.mimetype
+//       };
+//     }
+
+//     const job = new Job(jobData);
+//     await job.save();
+
+//     res.status(201).send('Job posted successfully');
+//   } catch (error) {
+//     console.error('Error posting job:', error);
+//     res.status(500).send('Server error');
+//   }
+// });
+
+// /**
+//  * @route   POST /api/jobs/:id/apply
+//  * @desc    Apply to a job
+//  */
+// router.post('/:id/apply', auth, async (req, res) => {
+//   try {
+//     const job = await Job.findById(req.params.id);
+//     if (!job) return res.status(404).send('Job not found');
+
+//     if (!job.applicants.includes(req.user._id)) {
+//       job.applicants.push(req.user._id);
+//       await job.save();
+//     }
+
+//     res.send('Successfully applied to the job');
+//   } catch (error) {
+//     console.error('Error applying to job:', error);
+//     res.status(500).send('Server error');
+//   }
+// });
+
+// /**
+//  * @route   GET /api/jobs/:id/pdf
+//  * @desc    Download job PDF
+//  */
+// router.get('/:id/pdf', async (req, res) => {
+//   try {
+//     const job = await Job.findById(req.params.id);
+//     if (!job || !job.pdf || !job.pdf.data) {
+//       return res.status(404).send('PDF not found');
+//     }
+
+//     res.set({
+//       'Content-Type': job.pdf.contentType,
+//       'Content-Disposition': 'attachment; filename="job-description.pdf"',
+//     });
+
+//     res.send(job.pdf.data);
+//   } catch (error) {
+//     console.error('Error fetching PDF:', error);
+//     res.status(500).send('Server error');
+//   }
+// });
+
+// module.exports = router;
+
 const express = require('express');
 const Job = require('../models/Job');
 const auth = require('../middleware/auth');
@@ -297,8 +405,27 @@ const upload = require('../middleware/upload'); // multer with memory storage
 const router = express.Router();
 
 /**
- * @route   GET /api/jobs
- * @desc    Get all jobs
+ * @swagger
+ * tags:
+ *   name: Jobs
+ *   description: Job management and application endpoints
+ */
+
+/**
+ * @swagger
+ * /api/jobs:
+ *   get:
+ *     summary: Get all job listings
+ *     tags: [Jobs]
+ *     responses:
+ *       200:
+ *         description: A list of jobs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Job'
  */
 router.get('/', async (req, res) => {
   try {
@@ -311,8 +438,34 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * @route   POST /api/jobs
- * @desc    Post a new job (employers only)
+ * @swagger
+ * /api/jobs:
+ *   post:
+ *     summary: Post a new job (employers only)
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               salary:
+ *                 type: string
+ *               pdf:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Job posted successfully
  */
 router.post('/', auth, upload.single('pdf'), async (req, res) => {
   try {
@@ -352,8 +505,25 @@ router.post('/', auth, upload.single('pdf'), async (req, res) => {
 });
 
 /**
- * @route   POST /api/jobs/:id/apply
- * @desc    Apply to a job
+ * @swagger
+ * /api/jobs/{id}/apply:
+ *   post:
+ *     summary: Apply to a job
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Job ID
+ *     responses:
+ *       200:
+ *         description: Successfully applied to the job
+ *       404:
+ *         description: Job not found
  */
 router.post('/:id/apply', auth, async (req, res) => {
   try {
@@ -373,8 +543,28 @@ router.post('/:id/apply', auth, async (req, res) => {
 });
 
 /**
- * @route   GET /api/jobs/:id/pdf
- * @desc    Download job PDF
+ * @swagger
+ * /api/jobs/{id}/pdf:
+ *   get:
+ *     summary: Download job PDF
+ *     tags: [Jobs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Job ID
+ *     responses:
+ *       200:
+ *         description: PDF file returned
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: PDF not found
  */
 router.get('/:id/pdf', async (req, res) => {
   try {

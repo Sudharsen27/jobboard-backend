@@ -180,16 +180,99 @@
 //   server.close(() => process.exit(1));
 // });
 
+// const express = require('express');
+// const mongoose = require('mongoose');
+// const cors = require('cors');
+// require('dotenv').config();
+
+// const authRoutes = require('./routes/auth');
+// const jobRoutes = require('./routes/jobs'); // ✅ Already present
+// const applicationRoutes = require('./routes/applications');
+
+// const app = express();
+
+// // Middleware
+// app.use(cors({
+//   origin: 'http://localhost:3000',
+//   credentials: true,
+// }));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// app.use((req, res, next) => {
+//   res.removeHeader('Cross-Origin-Opener-Policy');
+//   next();
+// });
+
+// // Routes
+// app.use('/api/auth', authRoutes);
+// app.use('/api/jobs', jobRoutes);             // ✅ Correctly placed
+// app.use('/api/applications', applicationRoutes);
+// app.use('/uploads', express.static('uploads'));
+
+// // Error handler
+// app.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(500).send('Something broke!');
+// });
+
+// // Connect to MongoDB
+// const PORT = process.env.PORT || 5000;
+
+// mongoose.connect(process.env.MONGO_URI)
+//   .then(() => {
+//     console.log('✅ MongoDB connected successfully');
+//     app.listen(PORT, () => {
+//       console.log(`🚀 Server running on port ${PORT}`);
+//     });
+//   })
+//   .catch((err) => {
+//     console.error('❌ MongoDB connection error:', err);
+//     process.exit(1);
+//   });
+
+// // Handle unhandled rejections
+// process.on('unhandledRejection', (err) => {
+//   console.error('Unhandled Rejection:', err);
+//   process.exit(1);
+// });
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
 
+// Import Routes
 const authRoutes = require('./routes/auth');
-const jobRoutes = require('./routes/jobs'); // ✅ Already present
+const jobRoutes = require('./routes/jobs');
 const applicationRoutes = require('./routes/applications');
 
+// Initialize app
 const app = express();
+
+// Swagger Configuration
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'JobBoard API',
+      version: '1.0.0',
+      description: 'API documentation for the JobBoard Application',
+    },
+    servers: [
+      {
+        url: 'http://localhost:5000',
+        description: 'Local development server',
+      },
+    ],
+  },
+  apis: ['./routes/*.js'], // Path to route files for Swagger comments
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Middleware
 app.use(cors({
@@ -199,6 +282,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Remove problematic headers
 app.use((req, res, next) => {
   res.removeHeader('Cross-Origin-Opener-Policy');
   next();
@@ -206,7 +290,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/jobs', jobRoutes);             // ✅ Correctly placed
+app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/uploads', express.static('uploads'));
 
@@ -216,14 +300,14 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
-// Connect to MongoDB
+// MongoDB connection and server start
 const PORT = process.env.PORT || 5000;
-
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected successfully');
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📘 Swagger docs available at http://localhost:${PORT}/api-docs`);
     });
   })
   .catch((err) => {
@@ -231,8 +315,13 @@ mongoose.connect(process.env.MONGO_URI)
     process.exit(1);
   });
 
-// Handle unhandled rejections
+// Unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
   process.exit(1);
 });
+
+app.get('/', (req, res) => {
+  res.send('🚀 JobBoard API is running. Visit /api-docs for API documentation.');
+});
+
