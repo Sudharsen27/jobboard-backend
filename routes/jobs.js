@@ -401,6 +401,8 @@ const express = require('express');
 const Job = require('../models/Job');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload'); // multer with memory storage
+const sendEmail = require('../utils/mailer');
+
 
 const router = express.Router();
 
@@ -581,6 +583,37 @@ router.get('/:id/pdf', async (req, res) => {
     res.send(job.pdf.data);
   } catch (error) {
     console.error('Error fetching PDF:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+router.post('/:id/apply', auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id).populate('postedBy', 'email name');
+    if (!job) return res.status(404).send('Job not found');
+
+    if (!job.applicants.includes(req.user._id)) {
+      job.applicants.push(req.user._id);
+      await job.save();
+    }
+
+    // Email to Applicant
+    await sendEmail(
+      req.user.email,
+      'Your Job Application is Confirmed',
+      `Hi ${req.user.name}, you have successfully applied for "${job.title}" at ${job.postedBy.name}.`
+    );
+
+    // Email to Employer
+    await sendEmail(
+      job.postedBy.email,
+      'New Application Received',
+      `${req.user.name} has applied for your job post "${job.title}".`
+    );
+
+    res.send('Successfully applied to the job');
+  } catch (error) {
+    console.error('Error applying to job:', error);
     res.status(500).send('Server error');
   }
 });

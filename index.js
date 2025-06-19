@@ -243,6 +243,8 @@ const cors = require('cors');
 require('dotenv').config();
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
+const sendEmail = require('./utils/mailer');
+
 
 // Import Routes
 const authRoutes = require('./routes/auth');
@@ -323,5 +325,19 @@ process.on('unhandledRejection', (err) => {
 
 app.get('/', (req, res) => {
   res.send('🚀 JobBoard API is running. Visit /api-docs for API documentation.');
+});
+
+app.get('/test-email', async (req, res) => {
+  try {
+    await sendEmail(
+      'sundarlingam272000@gmail.com',      // to (receiver email)
+      'Test Email from JobBoard',           // subject
+      'This is a test email from JobBoard backend server.' // text content
+    );
+    res.send('📨 Email sent successfully!');
+  } catch (error) {
+    console.error('❌ Failed to send email:', error);
+    res.status(500).send('Email failed');
+  }
 });
 
