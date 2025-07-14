@@ -1131,6 +1131,7 @@ router.post('/:id/apply', auth, async (req, res) => {
  *       200:
  *         description: PDF file download
  */
+
 router.get('/:id/pdf', async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
