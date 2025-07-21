@@ -114,6 +114,7 @@ require('dotenv').config();
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 const sendEmail = require('./utils/mailer');
+const dashboardRoutes = require('./routes/dashboard');
 
 // Import Routes
 const authRoutes = require('./routes/auth');
@@ -250,3 +251,6 @@ mongoose.connect(process.env.MONGO_URI)
     console.error('❌ MongoDB connection error:', err);
     process.exit(1);
   });
+
+app.use('/api/dashboard', dashboardRoutes);
+
