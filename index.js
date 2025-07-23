@@ -115,6 +115,8 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 const sendEmail = require('./utils/mailer');
 const dashboardRoutes = require('./routes/dashboard');
+const contactRoutes = require('./routes/contact'); // 👈 Add this at the top
+
 
 // Import Routes
 const authRoutes = require('./routes/auth');
@@ -177,6 +179,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/messages', messageRoutes); // ⬅️ Messaging route
 app.use('/uploads', express.static('uploads'));
+app.use('/api/contact', contactRoutes); 
 
 // Home and test-email route
 app.get('/', (req, res) => {
@@ -253,4 +256,6 @@ mongoose.connect(process.env.MONGO_URI)
   });
 
 app.use('/api/dashboard', dashboardRoutes);
+
+
 
